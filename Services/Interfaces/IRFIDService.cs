@@ -16,5 +16,7 @@ namespace DisantAPI.Services.Interfaces
         Task<List<RFIDBalance?>?> GetBalances();
         Task<List<RFIDJournal?>?> GetJournal();
         Task<List<RFIDInvoice?>?> GetInvoice();
+        Task<List<RFIDBalance?>?> GetTagOnBalanceByWorkshop(long userID, long workshoID);
+        Task<List<RFIDBalance?>?> GetAllTagsAtWorkshops(long userID);
     }
 }
