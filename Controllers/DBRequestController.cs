@@ -131,5 +131,21 @@ namespace DisantAPI.Controllers
         {
             return await _rfidService.GetWorkersInOpenedWorkshops(userId);
         }
+
+        [Route("gettagonbalanceworkshop")]
+        [HttpPost]
+        [ProducesResponseType(typeof(List<RFIDBalance>), 200)]
+        public async Task<List<RFIDBalance?>?> GetTagOnBalanceByWorkshop(long userId, long workshop)
+        {
+            return await _rfidService.GetTagOnBalanceByWorkshop(userId, workshop);
+        }
+
+        [Route("getalltagsatworkshops")]
+        [HttpPost]
+        [ProducesResponseType(typeof(List<RFIDBalance>), 200)]
+        public async Task<List<RFIDBalance?>?> GetAllTagsAtWorkshops(long userId)
+        {
+            return await _rfidService.GetAllTagsAtWorkshops(userId);
+        }
     }
 }

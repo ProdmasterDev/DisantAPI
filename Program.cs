@@ -12,9 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IRFIDService, RFIDService>();
 
 var configuration = builder.Configuration;
-builder.Services.Configure<RFIDLoggerOptions>(configuration.GetSection(RFIDLoggerOptions.Position));
+//builder.Services.Configure<RFIDLoggerOptions>(configuration.GetSection(RFIDLoggerOptions.Position));
 
-builder.Services.AddSingleton(x=> new RFIDLoggerService(x.GetService<IOptions<RFIDLoggerOptions>>()?.Value.LogPath ?? string.Empty));
+//builder.Services.AddSingleton(x=> new RFIDLoggerService(x.GetService<IOptions<RFIDLoggerOptions>>()?.Value.LogPath ?? string.Empty));
 
 // Add services to the container.
 

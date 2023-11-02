@@ -11,6 +11,8 @@ namespace DisantAPI.Models
         public bool OnBalance { get; set; }
         [JsonProperty("employee")]
         public long Employee {  get; set; }
+        [JsonProperty("workshop")]
+        public long Workshop { get; set; }
         public string GetOnBalanceStringValue() { if (OnBalance) { return ".T."; } else { return ".F."; } }
     }
 }

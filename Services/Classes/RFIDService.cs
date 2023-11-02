@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Validations;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Policy;
 using System.Text;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -87,7 +88,7 @@ namespace DisantAPI.Services.Classes
 
             foreach (var epc in epcs)
             {
-                listB.Add(new RFIDBalance() { Employee = employee, Tag = epc.Trim(), OnBalance = onBalance });
+                listB.Add(new RFIDBalance() { Employee = employee, Tag = epc.Trim(), OnBalance = onBalance, Workshop = workshop });
             }
 
             try
@@ -124,9 +125,24 @@ namespace DisantAPI.Services.Classes
         }
         public async Task<PermissionsApiResponse?> GetPermissions(long userId)
         {
-            var query = "SELECT DISTINCT Permission " +
+            var query = "SELECT number, name " +
+                "FROM custom " +
+                $"WHERE number == {userId}";
+            var customs = await GetObjectsFromQueryAsync<List<Custom>>(query);
+            if (customs == default)
+            {
+                return default;
+            }
+
+            var custom = customs.FirstOrDefault();
+            if (custom == null)
+            {
+                return default;
+            }
+
+            query = "SELECT DISTINCT Rfidpermissions.Permission " +
                 "FROM Rfidpermissions " +
-                $"WHERE Employee == {userId}";
+                $"WHERE Rfidpermissions.Employee == {userId}";
             var obj = await GetObjectsFromQueryAsync<List<RFIDPermission>>(query);
             if (obj == default)
             {
@@ -137,6 +153,7 @@ namespace DisantAPI.Services.Classes
                 return new PermissionsApiResponse()
                 {
                     UserId = userId,
+                    Name = custom.Name,
                     Permissions = obj
                 };
             }
@@ -158,8 +175,7 @@ namespace DisantAPI.Services.Classes
                 return obj;
             }
         }
-
-        
+                
 
         private async Task<List<Custom>> GetOpenedWorkShops()
         {
@@ -205,6 +221,24 @@ namespace DisantAPI.Services.Classes
 
             }
             return workshops;
+        }
+
+        public async Task<List<RFIDBalance?>?> GetTagOnBalanceByWorkshop(long userID, long workshopID)
+        {
+            var query = "SELECT * " +
+                "FROM RFIDBalance " +
+                $"WHERE workshop == {workshopID}";
+
+            return await GetObjectsFromQueryAsync<List<RFIDBalance?>?>(query);
+        }
+
+        public async Task<List<RFIDBalance?>?> GetAllTagsAtWorkshops(long userID)
+        {
+            var query = "SELECT * " +
+                "FROM RFIDBalance " +
+                "WHERE NOT EMPTY(workshop) AND workshop <> 0";
+
+            return await GetObjectsFromQueryAsync<List<RFIDBalance?>?>(query);
         }
 
         private async Task<long> GetNextRFIDJournalKey()
@@ -282,7 +316,7 @@ namespace DisantAPI.Services.Classes
 
         public async Task<List<RFIDBalance?>?> GetBalances()
         {
-            var query = "SELECT Tag, Onbalance, Employee " +
+            var query = "SELECT Tag, Onbalance, Employee, Workshop " +
                "FROM rfidbalance";
             return await GetObjectsFromQueryAsync<List<RFIDBalance?>?>(query);
         }
@@ -300,6 +334,7 @@ namespace DisantAPI.Services.Classes
                "FROM rfidinvoice";
             return await GetObjectsFromQueryAsync<List<RFIDInvoice?>?>(query);
         }
+
         private async Task<bool> CheckBalance(string epc)
         {
             var query = "SELECT Tag, Onbalance, Employee " +
@@ -333,7 +368,7 @@ namespace DisantAPI.Services.Classes
             try
             {
                 var query = "INSERT INTO rfidbalance " +
-                $"VALUES ('{balance.Tag}', {balance.GetOnBalanceStringValue()}, {balance.Employee}) ";
+                $"VALUES ('{balance.Tag}', {balance.GetOnBalanceStringValue()}, {balance.Employee}, {balance.Workshop}) ";
                 var obj = await ExecuteQuery(query);
                 return true;
             }
@@ -348,7 +383,7 @@ namespace DisantAPI.Services.Classes
             try
             {
                 var query = "UPDATE rfidbalance " +
-                $"SET Onbalance = {balance.GetOnBalanceStringValue()}, Employee = {balance.Employee} " +
+                $"SET Onbalance = {balance.GetOnBalanceStringValue()}, Employee = {balance.Employee}, Workshop = {balance.Workshop} " +
                 $"WHERE Tag == '{balance.Tag}'";
                 var obj = await ExecuteQuery(query);
                 return true;
@@ -383,7 +418,10 @@ namespace DisantAPI.Services.Classes
 
         private T? GetObjectFromDataString<T>(string dataString)
         {
-            if (typeof(T) == typeof(List<RFIDJournal>) || typeof(T) == typeof(List<RFIDInvoice>) || typeof(T) == typeof(List<RFIDPermission>))
+            if (typeof(T) == typeof(List<RFIDJournal>)
+                || typeof(T) == typeof(List<RFIDInvoice>)
+                || typeof(T) == typeof(List<RFIDPermission>)
+                || typeof(T) == typeof(Custom))
                 dataString = dataString.Replace(".0", string.Empty);
             
             return JsonConvert.DeserializeObject<T>(dataString);
