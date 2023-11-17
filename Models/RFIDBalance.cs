@@ -5,8 +5,12 @@ namespace DisantAPI.Models
 {
     public class RFIDBalance
     {
+        [JsonProperty("number")]
+        public long Number { get; set; } = 0;
         [JsonProperty("tag")]
-        public string Tag { get; set; }
+        public string Tag { get; set; } = string.Empty;
+        [JsonProperty("name")]
+        public string Name { get; set; } = string.Empty;
         [JsonProperty("onbalance")]
         public bool OnBalance { get; set; }
         [JsonProperty("employee")]

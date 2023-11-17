@@ -256,6 +256,21 @@ namespace DisantAPI.Services.Classes
             }
         }
 
+        private async Task<long> GetNextRFIDBalanceNumber()
+        {
+            var query = "SELECT MAX(Number) as Number " +
+                "FROM RFIDBalance";
+            var obj = await GetObjectsFromQueryAsync<List<RFIDBalance>>(query);
+            if (obj == default || !obj.Any())
+            {
+                return 1;
+            }
+            else
+            {
+                return obj.First().Number + 1;
+            }
+        }
+
         private async Task<bool> AddJournal(RFIDJournal journal)
         {
             try
@@ -367,8 +382,9 @@ namespace DisantAPI.Services.Classes
         {
             try
             {
-                var query = "INSERT INTO rfidbalance " +
-                $"VALUES ('{balance.Tag}', {balance.GetOnBalanceStringValue()}, {balance.Employee}, {balance.Workshop}) ";
+                long number = await GetNextRFIDBalanceNumber();
+                var query = "INSERT INTO rfidbalance (number, name, tag, onbalance, employee, workshop) " +
+                $"VALUES ({number},'', '{balance.Tag}', {balance.GetOnBalanceStringValue()}, {balance.Employee}, {balance.Workshop}) ";
                 var obj = await ExecuteQuery(query);
                 return true;
             }
